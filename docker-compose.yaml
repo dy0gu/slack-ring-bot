@@ -1,0 +1,21 @@
+services:
+  slack-ring-bot:
+    image: ghcr.io/dy0gu/slack-ring-bot:latest
+    pull_policy: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - RING_USERNAME=${RING_USERNAME}
+      - RING_PASSWORD=${RING_PASSWORD}
+      - RING_OTP=${RING_OTP}
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      - SLACK_CHANNEL_ID=${SLACK_CHANNEL_ID}
+    volumes:
+      - videos:/app/videos
+      - cache:/app/.cache
+
+volumes:
+  videos:
+  cache:

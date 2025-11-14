@@ -1,0 +1,20 @@
+# Docker ignore file
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+.env
+*.token.cache
+videos/
+.git/
+.github/
+.gitignore
+README.md
+CONTRIBUTING.md
+CHANGELOG.md
+.pre-commit-config.yaml
+*.md
+.vscode/
+.idea/
