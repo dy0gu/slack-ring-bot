@@ -1,45 +1,36 @@
-name: "build"
+# https://github.com/googleapis/release-please?tab=readme-ov-file#how-do-i-change-the-version-number
+name: "release"
 
 on:
-  workflow_call:
-    inputs:
-      version:
-        description: "Semver build version, for docker metadata"
-        required: true
-        type: string
+  push:
+    branches: [main]
 
 concurrency:
-  group: ${{ github.workflow }}-build-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  docker:
+  metadata:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      tag-name: ${{ steps.metadata.outputs.tag_name }}
+      release-created: ${{ steps.metadata.outputs.release_created }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: metadata
+        with:
+          config-file: release.json
+          manifest-file: .manifest.json
+  build:
     permissions:
       contents: read
       packages: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
-        with:
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/metadata-action@v5
-        id: metadata
-        with:
-          images: |
-            ${{ github.repository }}
-            ghcr.io/${{ github.repository }}
-          tags: |
-            type=semver,pattern={{version}},value=${{ inputs.version }}
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.metadata.outputs.tags }}
-          labels: ${{ steps.metadata.outputs.labels }}
+    needs: [metadata]
+    if: ${{ needs.metadata.outputs.release-created}}
+    uses: ./.github/workflows/build.yaml
+    with:
+      version: ${{ needs.metadata.outputs.tag-name }}
+    secrets: inherit

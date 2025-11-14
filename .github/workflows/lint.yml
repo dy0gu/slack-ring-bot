@@ -1,45 +1,24 @@
-name: "build"
+name: "lint"
 
 on:
-  workflow_call:
-    inputs:
-      version:
-        description: "Semver build version, for docker metadata"
-        required: true
-        type: string
+  push:
+    branches: [main]
+  pull_request_target:
 
 concurrency:
-  group: ${{ github.workflow }}-build-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  docker:
+  check:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
+      - uses: actions/setup-python@v5
         with:
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/metadata-action@v5
-        id: metadata
-        with:
-          images: |
-            ${{ github.repository }}
-            ghcr.io/${{ github.repository }}
-          tags: |
-            type=semver,pattern={{version}},value=${{ inputs.version }}
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.metadata.outputs.tags }}
-          labels: ${{ steps.metadata.outputs.labels }}
+          python-version-file: "pyproject.toml"
+          cache: "pip"
+      - name: Install dependencies
+        run: pip install .[check]
+      - name: Run check
+        run: ruff check && ruff format --check
