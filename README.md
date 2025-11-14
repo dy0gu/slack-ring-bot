@@ -1,8 +1,8 @@
-# Ring Doorbell Slack Bot 🔔💬
+# Ring Ring 🔔💬
 
 Slack bot that listens to Ring doorbell events and automatically sends video recordings to your Slack team channel. Built with the unofficial (reverse-engineered) [python-ring-doorbell](https://github.com/python-ring-doorbell/python-ring-doorbell) API library.
 
-**NOTE:** You need to have
+**NOTE:** At the moment you need to have at least a basic Ring subscription (the cheapest plan) assigned to the device you want to get video clips from. Otherwise, the bot won't be able to retrieve any recordings.
 
 ## Development 🛠️
 
@@ -23,8 +23,8 @@ Slack bot that listens to Ring doorbell events and automatically sends video rec
 
   - Create a `.env` file based on the [`.env.example`](.env.example) file.
 
-  - Note that the Ring OTP code should be introduced with a large expiry time remaining. While Ring's authentication gives some leeway for code validity, you'll have to quickly start the bot after
-  setting up that environment variable. If you don't have Ring 2FA enabled you **still** need to set this variable, but it can be any value.
+  - Be aware that while Ring's authentication gives some leeway for code validity, you'll have to quickly start the bot after
+  setting up the Ring OTP environment variable. If you don't have Ring 2FA enabled you **still** need to set this variable, but it can be any value, you won't need to worry about it.
 
   - Start the app:
 
@@ -55,7 +55,7 @@ The bot is designed to run continuously as a Docker container.
 
 - Supply the [required environment variables](.env.example) when running the container, just like in development.
 
-- Start the container using the provided `docker-compose.yaml`:
+- Start the container, e.g using the provided `docker-compose.yaml`:
 
   ```shell
   docker compose up
