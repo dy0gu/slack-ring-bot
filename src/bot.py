@@ -1,11 +1,15 @@
 import asyncio
 import signal
-import sys
 from datetime import datetime
 from pathlib import Path
 from utils import env, EnvVar
 
-from ring_doorbell import AuthenticationError, Ring, RingDoorBell
+from ring_doorbell import (
+    AuthenticationError,
+    Ring,
+    RingDoorBell,
+    Requires2FAError,
+)
 
 from ring_auth import RingAuthenticator
 from slack_client import SlackNotifier
@@ -63,26 +67,16 @@ class Bot:
             else:
                 print(f"✅ Video downloaded to {video_path}")
 
-            success = await self.slack.send_video(
+            await self.slack.send_video(
                 video_path=video_path,
                 device_name=device_name,
-                event_type="motion",
                 timestamp=timestamp,
             )
-
-            if success:
-                print("✅ Video sent to Slack successfully")
-            else:
-                print("❌ Failed to send video to Slack")
-
         except Exception as e:
             print(f"❌ Error downloading/sending video: {e}")
 
     async def poll(self) -> None:
-        if not self.ring:
-            print("❌ Ring object not initialized, failed to poll")
-            sys.exit(1)
-
+        assert self.ring is not None
         await self.ring.async_update_data()
         devices = self.ring.devices()
 
@@ -102,7 +96,7 @@ class Bot:
                         self.recording_ids[device.id] = latest_id
 
                         timestamp = datetime.now()
-                        filename = f"{device.id}_recording_{timestamp.strftime('%Y%m%d_%H%M%S')}.mp4"
+                        filename = f"{device.id}_latest.mp4"
                         video_path = VIDEO_DIR / filename
 
                         # Download and send video
@@ -120,17 +114,29 @@ class Bot:
     async def start(self) -> None:
         print("🚀 Starting...")
         try:
-            print("🔒 Authenticating with Ring credentials...")
+            print("🚪 Logging in with Ring credentials...")
             auth = await self.authenticator.async_authenticate()
             self.ring = Ring(auth)
             await self.ring.async_create_session()
             await self.ring.async_update_data()
             print("✅ Ring session created")
-
+        except Requires2FAError as e:
+            print(
+                f"🔒 2FA challenged failed (code is wrong or you are rate-limited and need to wait) {e}"
+            )
+            await self.stop()
+            return
+        except AuthenticationError as e:
+            print(f"🔒 Authentication error: {e}")
+            await self.stop()
+            return
+        try:
+            assert self.ring is not None
             devices = self.ring.devices()
             if devices.video_devices.count == 0:
                 print("❌ No video devices found in Ring account.")
-                sys.exit(1)
+                await self.stop()
+                return
             print("\n📷 Connected video devices:")
             for video_device in devices.video_devices:
                 print(f"\n\t🟢 {video_device.name} (ID: {video_device.id})")
@@ -147,13 +153,10 @@ class Bot:
             while self.running:
                 await self.poll()
                 await asyncio.sleep(POLL_INTERVAL_SECONDS)
-
-        except AuthenticationError as e:
-            print(f"🔒 Authentication error: {e}")
-            sys.exit(1)
         except Exception as e:
             print(f"❌ Unexpected error: {e}")
-            sys.exit(1)
+            await self.stop()
+            return
 
     async def stop(self) -> None:
         print("\n🛑 Stopping bot...")

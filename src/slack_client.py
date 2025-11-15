@@ -16,7 +16,6 @@ class SlackNotifier:
         self,
         video_path: str | Path,
         device_name: str,
-        event_type: str,
         timestamp: datetime,
         message: str | None = None,
     ) -> bool:
@@ -28,24 +27,23 @@ class SlackNotifier:
 
         time_str = timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
-        title = f"🔔 {device_name} - {event_type.capitalize()}"
+        title = f"🔔 {device_name}"
         initial_comment = f"{title}\n📅 {time_str}"
         if message:
-            initial_comment += f"\n{message}"
+            initial_comment += f"\n\n{message}"
 
         try:
             print(f"💬 Uploading video to Slack channel {self.channel_id}...")
             response = self.client.files_upload_v2(
                 channel=self.channel_id,
                 file=str(video_path),
-                title=title,
                 initial_comment=initial_comment,
             )
 
             if response["ok"]:
                 print("✅ Video uploaded successfully to Slack")
                 video_path.unlink()
-                print(f"🗑️ Cleaned up local video file: {video_path}")
+                print(f"🗑️ Cleaned up local file: {video_path}")
                 return True
             else:
                 print(f"❌ Failed to upload video: {response}")
