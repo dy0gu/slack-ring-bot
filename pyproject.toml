@@ -1,6 +1,6 @@
 [project]
 name = "slack-ring-bot"
-version = "1.0.0"
+version = "1.0.1"
 requires-python = ">=3.12"
 dependencies = [
     "ring-doorbell==0.9.13",
