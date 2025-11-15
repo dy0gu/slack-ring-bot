@@ -32,6 +32,13 @@ Slack bot that listens to Ring doorbell events and automatically sends video rec
     python src/bot.py
     ```
 
+  - Alternatively, you can also force the build property of the provided `docker-compose.yaml` to run, allowing you to test the
+    Docker setup in development:
+
+    ```shell
+    docker compose up --build
+    ```
+
 - ### Tooling 🧰
 
   - Ruff is used as a linter and formatter:

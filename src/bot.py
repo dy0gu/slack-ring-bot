@@ -109,6 +109,8 @@ class Bot:
                         )
 
             except Exception as e:
+                if not self.running:
+                    return
                 print(f"❌ Error polling device {device.name}: {e}")
 
     async def start(self) -> None:
@@ -120,9 +122,9 @@ class Bot:
             await self.ring.async_create_session()
             await self.ring.async_update_data()
             print("✅ Ring session created")
-        except Requires2FAError as e:
+        except Requires2FAError:
             print(
-                f"🔒 2FA challenged failed (code is wrong or you are rate-limited and need to wait) {e}"
+                "🔒 Authentication error: Account is rate-limited, wait an hour before trying again"
             )
             await self.stop()
             return
@@ -141,7 +143,6 @@ class Bot:
             for video_device in devices.video_devices:
                 print(f"\n\t🟢 {video_device.name} (ID: {video_device.id})")
 
-            # await self.slack.send_message("🤖 Hi there, I'm back")
             VIDEO_DIR.mkdir(exist_ok=True)
 
             print(
@@ -154,6 +155,8 @@ class Bot:
                 await self.poll()
                 await asyncio.sleep(POLL_INTERVAL_SECONDS)
         except Exception as e:
+            if not self.running:
+                return
             print(f"❌ Unexpected error: {e}")
             await self.stop()
             return

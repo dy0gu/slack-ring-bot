@@ -1,3 +1,5 @@
+name: ring
+
 services:
   bot:
     image: ghcr.io/dy0gu/slack-ring-bot:latest

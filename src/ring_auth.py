@@ -23,8 +23,9 @@ class RingAuthenticator:
         self.auth = None
 
     def _token_updated(self, token: dict) -> None:
+        CACHE_DIR.mkdir(exist_ok=True)
         self.cache_path.write_text(json.dumps(token))
-        print("🔄 Token updated and cached.")
+        print("🔄 Authentication token updated and cached.")
 
     async def async_authenticate(self) -> Auth:
         if self.cache_path.is_file():
@@ -35,7 +36,9 @@ class RingAuthenticator:
             try:
                 return self.auth
             except AuthenticationError:
-                print("⌛ Cached token expired, fetching new token...")
+                print(
+                    "⌛ Cached authentication token expired, fetching new token..."
+                )
 
         self.auth = Auth(self.user_agent, None, self._token_updated)
 
