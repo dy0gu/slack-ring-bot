@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/dy0gu/slack-ring-bot/compare/v1.0.1...v1.0.2) (2025-11-15)
+
+
+### Bug Fixes
+
+* Remove duplicate errors ([30d61e5](https://github.com/dy0gu/slack-ring-bot/commit/30d61e5ed7cc97343cd41b65cea9fe09d8e999c0))
+
 ## [1.0.1](https://github.com/dy0gu/slack-ring-bot/compare/v1.0.0...v1.0.1) (2025-11-15)
 
 
