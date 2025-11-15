@@ -1,5 +1,5 @@
 services:
-  slack-ring-bot:
+  bot:
     image: ghcr.io/dy0gu/slack-ring-bot:latest
     pull_policy: always
     build:
